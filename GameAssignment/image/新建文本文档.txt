@@ -1,0 +1,121 @@
+Level1::Level1()
+{
+
+}
+
+Level1::~Level1()
+{
+
+}
+
+void Level1::init()
+{
+
+	D3DXCreateSprite(GGraphic::getInstance()->d3dDevice, &sprite);
+	D3DXCreateTextureFromFileEx(GGraphic::getInstance()->d3dDevice, "Image/TestingBackground1", D3DX_DEFAULT, D3DX_DEFAULT,
+		D3DX_DEFAULT, NULL, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED,
+		D3DX_DEFAULT, D3DX_DEFAULT,
+		D3DCOLOR_XRGB(255, 255, 255),
+		NULL,
+		NULL,
+		&texture);
+
+	characterSize.x = 32;
+	characterSize.y = 48;
+
+	characterCurrentFrame = 0;
+	spriteRect.left = 0;
+	spriteRect.top = 0;
+	spriteRect.right = spriteRect.left + characterSize.x;
+	spriteRect.bottom = spriteRect.top + characterSize.y;
+
+	scaling.x = 1.0f;
+	scaling.y = 1.0f;
+
+	animationTimer = 0;
+	animationRate = 1.0f / 4;
+	speed = 50.0f;
+	animationRow = 0;
+	isCharacterMoving = false;
+	direction.x = 0;
+	direction.y = 1;
+
+}
+
+void Level1::update()
+{
+	if (GInput::getInstance()->isKeyDown(DIK_A))
+	{
+		animationRow = 1;
+		isCharacterMoving = true;
+		direction.x = -1;
+		direction.y = 0;
+	}
+	else if (GInput::getInstance()->isKeyDown(DIK_W))
+	{
+		animationRow = 3;
+		isCharacterMoving = true;
+		direction.x = 0;
+		direction.y = -1;
+	}
+	else if (GInput::getInstance()->isKeyDown(DIK_S))
+	{
+		animationRow = 0;
+		isCharacterMoving = true;
+		direction.x = 0;
+		direction.y = 1;
+	}
+	else if (GInput::getInstance()->isKeyDown(DIK_D))
+	{
+		animationRow = 2;
+		isCharacterMoving = true;
+		direction.x = 1;
+		direction.y = 0;
+	}
+	else
+	{
+		isCharacterMoving = false;
+	}
+}
+
+void Level1::fixedUpdate()
+{
+	if (isCharacterMoving)
+	{
+		animationTimer += 1 / 60.0f;
+
+		D3DXVECTOR2 velocity = direction * (speed / 60.0f);
+		position += velocity;
+	}
+	if (animationTimer >= animationRate)
+	{
+		animationTimer -= animationRate;
+		characterCurrentFrame++;
+		characterCurrentFrame %= 4;
+	}
+	spriteRect.left = characterSize.x * characterCurrentFrame;
+	spriteRect.top = animationRow * characterSize.y;
+	spriteRect.right = spriteRect.left + characterSize.x;
+	spriteRect.bottom = spriteRect.top + characterSize.y;
+
+	D3DXMatrixTransformation2D(&mat, NULL, 0.0, &scaling, NULL, NULL, &position);
+}
+
+void Level1::draw()
+{
+	sprite->Begin(D3DXSPRITE_ALPHABLEND);
+	sprite->SetTransform(&mat);
+
+	sprite->Draw(texture, &spriteRect, NULL, NULL, D3DCOLOR_XRGB(255, 255, 255));
+
+	sprite->End();
+}
+
+void Level1::release()
+{
+	sprite->Release();
+	sprite = NULL;
+
+	texture->Release();
+	texture = NULL;
+}
